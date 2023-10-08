@@ -1,0 +1,19 @@
+# OPEN FILE 
+(venv) B:\dnd\drf\Drf_Apis\drf_apis\api_client>py basic.py 
+
+"""
+I/P: requests.get(end_point, json={"query": "hello request"})
+O/P: {'args': {}, 'data': '{"query": "hello request"}', 'files': {}, 'form': {}, 'headers': {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate', 'Content-Length': '26', 'Content-Type': 'application/json', 'Host': 'httpbin.org', 'User-Agent': 'python-requests/2.31.0', 'X-Amzn-Trace-Id': 'Root=1-6522625d-29062d34755e19977f47eda4'}, 'json': {'query': 'hello request'}, 'method': 'GET', 'origin': '202.131.143.244', 'url': 'https://httpbin.org/anything'}
+
+
+CON: if input is json query then returns a data in 'Content-Type': 'application/json'
+"""
+
+"""
+I/P: requests.get(end_point, data={"query": "hello request"})
+O/P: {'args': {}, 'data': '', 'files': {}, 'form': {'query': 'hello request'}, 'headers': {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate', 'Content-Length': '19', 'Content-Type': 'application/x-www-form-urlencoded', 'Host': 'httpbin.org', 'User-Agent': 'python-requests/2.31.0', 'X-Amzn-Trace-Id': 'Root=1-6522633e-1fc81e9a11827580111d4d38'}, 'json': None, 'method': 'GET', 'origin': '202.131.143.244', 'url': 'https://httpbin.org/anything'}
+
+
+CON: if input is data query then returns a form in 'Content-Type': 'application/x-www-form-urlencoded'
+"""
+
