@@ -1,70 +1,79 @@
-# Views O/P
-# Http Request of Django
-dir(request)==>['COOKIES', 'FILES', 'GET', 'META', 'POST', '__class__', 
-                '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', 
-                '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', 
-                '__init__', '__init_subclass__', '__iter__', '__le__', '__lt__', 
-                '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', 
-                '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 
-                '__weakref__', '_current_scheme_host', '_encoding', '_get_full_path', 
-                '_get_post', '_get_raw_host', '_get_scheme', '_initialize_handlers', 
-                '_load_post_and_files', '_mark_post_parse_error', '_messages', 
-                '_read_started', '_set_content_type_params', '_set_post', '_stream', 
-                '_upload_handlers', 'accepted_types', 'accepts', 'body', 'build_absolute_uri', 
-                'close', 'content_params', 'content_type', 'csrf_processing_done', 'encoding', 
-                'environ', 'get_full_path', 'get_full_path_info', 'get_host', 'get_port', 
-                'get_signed_cookie', 'headers', 'is_secure', 'method', 'parse_file_upload', 
-                'path', 'path_info', 'read', 'readline', 'readlines', 'resolver_match', 
-                'scheme', 'session', 'upload_handlers', 'user']
+# Django Shell:
+py manage.py shell
+
+(InteractiveConsole)
+from product_app.models import Product
+Product.objects.create(title="First_obj", content="Creating the first Obj", price=0.10)
+    <Product: Product object (1)>
+
+Product.objects.create(title="Second_obj", content="Creating the Second Obj", price=1.00) 
+    <Product: Product object (2)>
 
 
-request.body ==> b'{"query": "hello request"}'  # Byte String Format
+Product.objects.all().order_by("?").first()
+    <Product: Product object (2)>
+Product.objects.all().order_by("?").first()
+    <Product: Product object (1)>
+
+Con: Adding two datas to Databases...
+
+----------------------------ProductViews-------------------------------------
+i/p :  
+    """Same as model_to_dict() """
+    # data["id"] = model_data.id
+    # data["title"] = model_data.title
+    # data["content"] = model_data.content
+    # data["price"] = model_data.price
+    data = model_to_dict(model_data)
+o/p : 
+    {'id': 2, 'title': 'Second_obj', 'content': 'Creating the Second Obj', 'price': '1.00'}
 
 
----------------------------------INPUT BY BASIC.PY AND OUTPUT BY VIEWS.PY:-----------------------------------
-BASIC.PY:
-    I/P: requests.get(end_point, json={"query": "hello request"}, params={"product_id": 123})
-    O/P: {'query': 'hello request', 'params': {'product_id': ['123']}, 
-          'headers': {'Content-Length': '26', 'Content-Type': 'application/json', 
-          'Host': 'localhost:8000', 'User-Agent': 'python-requests/2.31.0', 
-          'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive'}, 
-          'content_type': 'application/json'}
+i/p : 
+    data = model_to_dict(model_data, fields=["id", "title"])
+o/p:
+    {'id': 2, 'title': 'Second_obj'}
 
 
-OUTPUT : Views.py
-    O/P: b'{"query": "hello request"}'
-            <QueryDict: {'product_id': ['123']}>
-            <QueryDict: {}>
-            {'query': 'hello request'}
-            {'product_id': ['123']} 
+------------------------Diff JsonResponse, HttpResponse----------------------------------
+product views:
+    i/p : HttpResponse(data)   #In HttpResponse by default 'Content-Type': 'text/html; charset=utf-8' 
+
+basic: 
+    i/p : print(get_response.headers)
+    o/p : {'Date': 'Sun, 08 Oct 2023 17:05:56 GMT', 'Server': 'WSGIServer/0.2 CPython/3.9.7',
+        'Content-Type': 'text/html; charset=utf-8', 'X-Frame-Options': 'DENY', 
+        'Content-Length': '7', 'X-Content-Type-Options': 'nosniff', 
+        'Referrer-Policy': 'same-origin', 
+        'Cross-Origin-Opener-Policy': 'same-origin'}
+
+    i/p : print(get_response.text)
+    o/p : idtitle
+
+    i/p : print(get_response.json())
+    o/p : error .... # RequestsJSONDecodeError due to default 'Content-Type': 'text/html; charset=utf-8' 
 
 
-            
-    http://127.0.0.1:8000/api/?product_id=123 :  # localhost
-            {
-            "params": {
-                "product_id": [
-                    "123"
-                ]
-            },
-            "headers": {
-                "Content-Length": "",
-                "Content-Type": "text/plain",
-                "Host": "127.0.0.1:8000",
-                "Connection": "keep-alive",
-                "Sec-Ch-Ua": "\"Microsoft Edge\";v=\"117\", \"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"117\"",
-                "Sec-Ch-Ua-Mobile": "?0",
-                "Sec-Ch-Ua-Platform": "\"Windows\"",
-                "Upgrade-Insecure-Requests": "1",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36 Edg/117.0.2045.60",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                "Sec-Fetch-Site": "none",
-                "Sec-Fetch-Mode": "navigate",
-                "Sec-Fetch-User": "?1",
-                "Sec-Fetch-Dest": "document",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Cookie": "csrftoken=KlHP4BAtHN0BWOWJzvPYp0ZPySetG9n1; sessionid=xgf05b3vvhvjo9nxy8tppm5s5s7nmphc"
-            },
-            "content_type": "text/plain"
-            }
+product views:
+    i/p : HttpResponse(json_data_str, headers={"content-type": "application/json"})   # 'Content-Type': 'application/json'
+
+basic: 
+    i/p : print(get_response.headers)
+    o/p : {'Date': 'Sun, 08 Oct 2023 17:26:57 GMT', 'Server': 'WSGIServer/0.2 CPython/3.9.7', 
+           'content-type': 'application/json', 'X-Frame-Options': 'DENY', 
+           'Content-Length': '32', 'X-Content-Type-Options': 'nosniff', 
+           'Referrer-Policy': 'same-origin', 'Cross-Origin-Opener-Policy': 'same-origin'}
+
+    i/p : print(get_response.text)
+    o/p : {"id": 2, "title": "Second_obj"}
+
+    i/p : print(get_response.json())
+    o/p : {'id': 2, 'title': 'Second_obj'}
+
+
+con: 
+    In HttpResponse by default 'Content-Type': 'text/html; charset=utf-8'
+    if you change the headers content type to application/json 
+    headers={"content-type": "application/json"} 
+    just you have to convert dict data to json data
+    then HttpResponse == JsonResponse
