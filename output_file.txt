@@ -1,79 +1,132 @@
-# Django Shell:
+DRF API VIEW:
+
+i/p:
+    # Function Based View
+    @api_view(["GET", "POST"])
+    data = model_to_dict(model_data, fields=["id", "title", "price"]) 
+    return Response(data)
+
+o/p:
+    basic.py:
+        print(get_response.headers)
+        print(get_response.text)
+        print(get_response.json())
+    
+    o/p:
+        {'Date': 'Sat, 14 Oct 2023 08:09:08 GMT', 'Server': 'WSGIServer/0.2 CPython/3.9.7', 'Content-Type': 'application/json', 'Vary': 'Accept, Cookie', 'Allow': 'POST, GET, OPTIONS', 'X-Frame-Options': 'DENY', 'Content-Length': '40', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'Cross-Origin-Opener-Policy': 'same-origin'}
+        {"id":1,"title":"First_obj","price":0.1}
+        {'id': 1, 'title': 'First_obj', 'price': 0.1}
+
+#--------------------------------------------------------------------------------------------
+
+i/p:
+    # In Django simple view we use as a request.method 
+    if request.method != "POST":
+        return Response({"details:":"GET method is not Allowed"}, status=405)
+
+o/p:
+    basic.py:
+        print(get_response.headers)
+        print(get_response.text)
+        print(get_response.json())
+    
+    o/p:
+        {'Date': 'Sat, 14 Oct 2023 08:23:00 GMT', 'Server': 'WSGIServer/0.2 CPython/3.9.7', 'Content-Type': 'application/json', 'Vary': 'Accept, Cookie', 'Allow': 'GET, POST, OPTIONS', 'X-Frame-Options': 'DENY', 'Content-Length': '40', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'Cross-Origin-Opener-Policy': 'same-origin'}
+        {"details:":"GET method is not Allowed"}
+        {'details:': 'GET method is not Allowed'}
+
+
+#----------------------------------------------------------------------------------
+Adding Model Property:
+    @property
+    def sale_price(self):
+        return "%.2f" %(float(self.price) * 0.8)
+
 py manage.py shell
 
-(InteractiveConsole)
-from product_app.models import Product
-Product.objects.create(title="First_obj", content="Creating the first Obj", price=0.10)
-    <Product: Product object (1)>
+    (InteractiveConsole)
+    >>> from product_app.models import Product 
+    >>> Product.objects.first().price
+    Decimal('0.10')
+    >>> Product.objects.first().sale_price   
+    '0.08'
+    >>> Product.objects.last().price      
+    Decimal('1.00')
+    >>> Product.objects.last().sale_price  
+    '0.80'
 
-Product.objects.create(title="Second_obj", content="Creating the Second Obj", price=1.00) 
-    <Product: Product object (2)>
+i/p: 
+    views.py
+        data = model_to_dict(model_data, fields=["id", "title", "price", "sales_price"]) 
 
-
-Product.objects.all().order_by("?").first()
-    <Product: Product object (2)>
-Product.objects.all().order_by("?").first()
-    <Product: Product object (1)>
-
-Con: Adding two datas to Databases...
-
-----------------------------ProductViews-------------------------------------
-i/p :  
-    """Same as model_to_dict() """
-    # data["id"] = model_data.id
-    # data["title"] = model_data.title
-    # data["content"] = model_data.content
-    # data["price"] = model_data.price
-    data = model_to_dict(model_data)
-o/p : 
-    {'id': 2, 'title': 'Second_obj', 'content': 'Creating the Second Obj', 'price': '1.00'}
-
-
-i/p : 
-    data = model_to_dict(model_data, fields=["id", "title"])
 o/p:
-    {'id': 2, 'title': 'Second_obj'}
+    basic.py:
+        {"id":2,"title":"Second_obj","price":1.0}
+        {'id': 2, 'title': 'Second_obj', 'price': 1.0}
 
 
-------------------------Diff JsonResponse, HttpResponse----------------------------------
-product views:
-    i/p : HttpResponse(data)   #In HttpResponse by default 'Content-Type': 'text/html; charset=utf-8' 
-
-basic: 
-    i/p : print(get_response.headers)
-    o/p : {'Date': 'Sun, 08 Oct 2023 17:05:56 GMT', 'Server': 'WSGIServer/0.2 CPython/3.9.7',
-        'Content-Type': 'text/html; charset=utf-8', 'X-Frame-Options': 'DENY', 
-        'Content-Length': '7', 'X-Content-Type-Options': 'nosniff', 
-        'Referrer-Policy': 'same-origin', 
-        'Cross-Origin-Opener-Policy': 'same-origin'}
-
-    i/p : print(get_response.text)
-    o/p : idtitle
-
-    i/p : print(get_response.json())
-    o/p : error .... # RequestsJSONDecodeError due to default 'Content-Type': 'text/html; charset=utf-8' 
+#---------------------------------------------------------------------------------------
+Hear is the play of Serializer where in output data having not "sales_price"
 
 
-product views:
-    i/p : HttpResponse(json_data_str, headers={"content-type": "application/json"})   # 'Content-Type': 'application/json'
+#models:
+ if we adding a property above the function then ex. def full_name() ---> we can called as ==> obj.full_name
+ if without property above the function then ex. def full_name() ---> we can called as ==> obj.full_name()
 
-basic: 
-    i/p : print(get_response.headers)
-    o/p : {'Date': 'Sun, 08 Oct 2023 17:26:57 GMT', 'Server': 'WSGIServer/0.2 CPython/3.9.7', 
-           'content-type': 'application/json', 'X-Frame-Options': 'DENY', 
-           'Content-Length': '32', 'X-Content-Type-Options': 'nosniff', 
-           'Referrer-Policy': 'same-origin', 'Cross-Origin-Opener-Policy': 'same-origin'}
+Models.py:
+adding one method without any property:    
+    def get_discount(self):
+            return "%.2f" %(float(self.price) * 0.5)
 
-    i/p : print(get_response.text)
-    o/p : {"id": 2, "title": "Second_obj"}
+Serializer i/p:
+    one new field:
+        my_discount = serializers.SerializerMethodField(read_only=True)
 
-    i/p : print(get_response.json())
-    o/p : {'id': 2, 'title': 'Second_obj'}
+        fields = [
+            "title",
+            "content",
+            "price",
+            "sale_price",
+            "get_discount",
+            "my_discount"
+        ]
+
+        def get_my_discount(self, obj):
+            # return obj.price  # you can acces the obj.user --> user.username
+            return obj.get_discount()
 
 
-con: 
-    In HttpResponse by default 'Content-Type': 'text/html; charset=utf-8'
-    if you change the headers content type to application/json 
-    headers={"content-type": "application/json"} 
-    just you have to convert dict data to json data
-    then HttpResponse == JsonResponse
+views.py:
+    data = ProductSerializer(instance).data
+
+
+o/p:
+    basic.py: i/p:
+        print(get_response.headers)
+        print(get_response.text)
+        print(get_response.json())
+
+
+    o/p : 
+    {'Date': 'Sat, 28 Oct 2023 10:59:37 GMT', 'Server': 'WSGIServer/0.2 CPython/3.9.7', 
+    'Content-Type': 'application/json', 'Vary': 'Accept, Cookie', 
+    'Allow': 'OPTIONS, GET, POST', 'X-Frame-Options': 'DENY', 'Content-Length': '136', 
+    'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 
+    'Cross-Origin-Opener-Policy': 'same-origin'}
+
+    {"title":"Second_obj","content":"Creating the Second Obj",
+    "price":"1.00","sale_price":"0.80","get_discount":"0.50",
+    "my_discount":"0.50"}
+
+    {'title': 'Second_obj', 'content': 'Creating the Second Obj', 
+    'price': '1.00', 'sale_price': '0.80', 'get_discount': '0.50', 
+    'my_discount': '0.50'}
+
+
+Conclusion:
+    Due to Serializer we can add fields without saving to database and send it to response
+
+    if we adding a property above the function then ex. def full_name() ---> we can called as ==> obj.full_name
+    if without property above the function then ex. def full_name() ---> we can called as ==> obj.full_name()
+
+        
