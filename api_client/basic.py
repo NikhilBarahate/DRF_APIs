@@ -2,7 +2,7 @@ import requests
 
 end_point = "http://localhost:8000/product/"  #http://127.0.0.1:8000/
 
-get_response = requests.get(end_point, json={"query": "hello request"}, params={"product_id": 123}) 
+get_response = requests.post(end_point, json={"content": "hello post request"}, params={"product_id": 123}) 
 
 
 print(get_response.headers)

@@ -1,132 +1,126 @@
-DRF API VIEW:
+DRF POST API VIEW:
+
+# JsonResponse: Drf post api Not work due to csrf token 
+
 
 i/p:
-    # Function Based View
-    @api_view(["GET", "POST"])
-    data = model_to_dict(model_data, fields=["id", "title", "price"]) 
-    return Response(data)
-
-o/p:
-    basic.py:
-        print(get_response.headers)
-        print(get_response.text)
-        print(get_response.json())
-    
-    o/p:
-        {'Date': 'Sat, 14 Oct 2023 08:09:08 GMT', 'Server': 'WSGIServer/0.2 CPython/3.9.7', 'Content-Type': 'application/json', 'Vary': 'Accept, Cookie', 'Allow': 'POST, GET, OPTIONS', 'X-Frame-Options': 'DENY', 'Content-Length': '40', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'Cross-Origin-Opener-Policy': 'same-origin'}
-        {"id":1,"title":"First_obj","price":0.1}
-        {'id': 1, 'title': 'First_obj', 'price': 0.1}
-
-#--------------------------------------------------------------------------------------------
-
-i/p:
-    # In Django simple view we use as a request.method 
-    if request.method != "POST":
-        return Response({"details:":"GET method is not Allowed"}, status=405)
-
-o/p:
-    basic.py:
-        print(get_response.headers)
-        print(get_response.text)
-        print(get_response.json())
-    
-    o/p:
-        {'Date': 'Sat, 14 Oct 2023 08:23:00 GMT', 'Server': 'WSGIServer/0.2 CPython/3.9.7', 'Content-Type': 'application/json', 'Vary': 'Accept, Cookie', 'Allow': 'GET, POST, OPTIONS', 'X-Frame-Options': 'DENY', 'Content-Length': '40', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'Cross-Origin-Opener-Policy': 'same-origin'}
-        {"details:":"GET method is not Allowed"}
-        {'details:': 'GET method is not Allowed'}
-
-
-#----------------------------------------------------------------------------------
-Adding Model Property:
-    @property
-    def sale_price(self):
-        return "%.2f" %(float(self.price) * 0.8)
-
-py manage.py shell
-
-    (InteractiveConsole)
-    >>> from product_app.models import Product 
-    >>> Product.objects.first().price
-    Decimal('0.10')
-    >>> Product.objects.first().sale_price   
-    '0.08'
-    >>> Product.objects.last().price      
-    Decimal('1.00')
-    >>> Product.objects.last().sale_price  
-    '0.80'
-
-i/p: 
-    views.py
-        data = model_to_dict(model_data, fields=["id", "title", "price", "sales_price"]) 
-
-o/p:
-    basic.py:
-        {"id":2,"title":"Second_obj","price":1.0}
-        {'id': 2, 'title': 'Second_obj', 'price': 1.0}
-
-
-#---------------------------------------------------------------------------------------
-Hear is the play of Serializer where in output data having not "sales_price"
-
-
-#models:
- if we adding a property above the function then ex. def full_name() ---> we can called as ==> obj.full_name
- if without property above the function then ex. def full_name() ---> we can called as ==> obj.full_name()
-
-Models.py:
-adding one method without any property:    
-    def get_discount(self):
-            return "%.2f" %(float(self.price) * 0.5)
-
-Serializer i/p:
-    one new field:
-        my_discount = serializers.SerializerMethodField(read_only=True)
-
-        fields = [
-            "title",
-            "content",
-            "price",
-            "sale_price",
-            "get_discount",
-            "my_discount"
-        ]
-
+    serializers.py:
         def get_my_discount(self, obj):
-            # return obj.price  # you can acces the obj.user --> user.username
+        try:
             return obj.get_discount()
+        except:
+            return None
 
-
-views.py:
-    data = ProductSerializer(instance).data
+    views.py:
+         serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            print(serializer.data)     #{'title': 'hello post request', 'content': None, 'my_discount': None}
+            data = serializer.data
 
 
 o/p:
-    basic.py: i/p:
-        print(get_response.headers)
+    basic.py:
+        get_response = requests.post(end_point, json={"title": "hello post request"}, params={"product_id": 123}) 
         print(get_response.text)
         print(get_response.json())
 
-
-    o/p : 
-    {'Date': 'Sat, 28 Oct 2023 10:59:37 GMT', 'Server': 'WSGIServer/0.2 CPython/3.9.7', 
-    'Content-Type': 'application/json', 'Vary': 'Accept, Cookie', 
-    'Allow': 'OPTIONS, GET, POST', 'X-Frame-Options': 'DENY', 'Content-Length': '136', 
-    'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 
-    'Cross-Origin-Opener-Policy': 'same-origin'}
-
-    {"title":"Second_obj","content":"Creating the Second Obj",
-    "price":"1.00","sale_price":"0.80","get_discount":"0.50",
-    "my_discount":"0.50"}
-
-    {'title': 'Second_obj', 'content': 'Creating the Second Obj', 
-    'price': '1.00', 'sale_price': '0.80', 'get_discount': '0.50', 
-    'my_discount': '0.50'}
+    o/p:
+        {"title":"hello post request","content":null,"my_discount":null}
+        {'title': 'hello post request', 'content': None, 'my_discount': None}
 
 
-Conclusion:
-    Due to Serializer we can add fields without saving to database and send it to response
+#-----------------------------------------------------------------------------------------------------
+i/p:
+    views.py:
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            data = serializer.save()
+            print(data)                         # Product object (4)
+            return Response(serializer.data)
 
-    if we adding a property above the function then ex. def full_name() ---> we can called as ==> obj.full_name
-    if without property above the function then ex. def full_name() ---> we can called as ==> obj.full_name()
+o/p:
+    basic.py:
+        get_response = requests.post(end_point, json={"title": "hello post request"}, params={"product_id": 123}) 
+        print(get_response.text)
+        print(get_response.json())
 
-        
+    basic - o/p: 
+        {"title":"hello post request","content":null,"price":"0.00",
+        "sale_price":"0.00","get_discount":"0.00","my_discount":"0.00"}
+
+        {'title': 'hello post request', 'content': None, 'price': '0.00', 
+        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}
+
+
+#----------------------------------------------------------------------------------------------------------
+i/p :
+    serializer.py:
+        def get_my_discount(self, obj):
+        return obj.get_discount()
+
+o/p:
+basics.py:
+    Gives: Error raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+    requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+    Because: Have no Object created...
+
+
+#-----------------------------------------------------------------------------------------------------------
+    Serializer Method Field Always gives you Field output 
+
+i/p :
+    serializer.py:
+    def get_my_discount(self, obj):
+        if not hasattr(obj, 'id'):
+            return None
+        if not isinstance(obj, Product):
+            return None
+        return obj.get_discount()
+
+
+o/p:
+basics.py:
+    {"title":"hello post request","content":null,"my_discount":null}
+    {'title': 'hello post request', 'content': None, 'my_discount': None}
+
+#------------------------------------------------------------------------------------
+i/p:
+    models.py:
+        title = models.CharField(max_length=50) # had no null=True
+
+    views.py:
+        if serializer.is_valid():
+                # data = serializer.save()
+                # print(data)
+                print(serializer.data)
+                return Response(serializer.data)
+            return Response({"invalid data:": "Not a good Data"}, status=status.HTTP_400_BAD_REQUEST)
+
+o/p:
+    basic.py:
+        get_response = requests.post(end_point, json={"content": "hello post request"}, 
+                                    params={"product_id": 123}) 
+        print(get_response.text)
+        print(get_response.json())
+
+    o/p:
+        {"invalid data:":"Not a good Data"}
+        {'invalid data:': 'Not a good Data'}
+
+
+#----------------------------------------------------------------------------------------------
+i/p:
+    views.py:
+        if serializer.is_valid(raise_exception=True):
+                
+o/p:
+    basic.py:
+        get_response = requests.post(end_point, json={"content": "hello post request"}, 
+                                     params={"product_id": 123}) 
+        print(get_response.text)
+        print(get_response.json())
+
+    o/p:
+        {"title":["This field is required."]}
+        {'title': ['This field is required.']}
