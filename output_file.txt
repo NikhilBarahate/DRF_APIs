@@ -1,308 +1,140 @@
-# Drf Generic Api View:
-
---------------generics.RetrieveAPIView:-------------------------------------------------
-i/p: views.py: 
-    class ProductDetailAPIView(generics.RetrieveAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-
-o/p: 
-    details.py
-        end_point = "http://localhost:8000/api/product/4/" 
-        get_response = requests.get(end_point) 
-        print(get_response.json())
-    
-    o/p:
-        {'title': 'hello post request', 'content': None, 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}
-
-
-----------------------CreateAPIView-----------------------------------------------------
-i/p: 
-    views.py:
-        class ProductCreateAPIView(generics.CreateAPIView):
-        queryset = Product.objects.all()
-        serializer_class = ProductSerializer
-
-o/p:
-    create.py:
-        end_point = "http://localhost:8000/api/product/create/" 
-        data = {
-            "title": "New Product Created...",
-            "content": "new content...",
-            "price": "ahsl"
-        }
-        get_response = requests.post(end_point, json=data) 
-        print(get_response.json()) 
-
-    o/p:
-        {'price': ['A valid number is required.']}
-
-
-o/p:
-    create.py:
-        data = {
-            "title": "New Product Created...",
-            "content": "new content...",
-            "price": 100
-        }
-
-        get_response = requests.post(end_point, json=data) 
-
-    o/p:
-        {'title': 'New Product Created...', 'content': 'new content...', 'price': '100.00', 
-        'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}
-
-
+# -------------------- Mixin GenericAPIView -------------------------------------------------------
 
 i/p:
     views.py:
-        print(serializer)      # ProductSerializer(context={'request': <rest_framework.request.Request: POST '/api/product/create/'>, 'format': None, 'view': <product_app.views.ProductCreateAPIView object>}, data={'title': 'New title having same content', 'price': 200}):  
-    title = CharField(max_length=50)    # OrderedDict([('title', 'New title having same content'), ('price', Decimal('200.00'))]) 
-        print(serializer.validated_data)
+        class ProductMixinView(
+            mixins.ListModelMixin, 
+            generics.GenericAPIView):
 
-        title = serializer.validated_data.get("title")
-        content = serializer.validated_data.get("content") or None
-        if not content:
-            content = title
-        serializer.save(content=content)
+            queryset = Product.objects.all()
+            serializer_class = ProductSerializer
+
+            def get(self, request, *args, **kwargs):  #HTTP--->get
+                return self.list(request, *args, **kwargs)
+    
+            def post(self, request, *args, **kwargs):  #HTTP--->post
+                return self.list(request, *args, **kwargs)
 
 
-O/P : 
+    url.py:
+        path("list/", ProductMixinView.as_view()),
+        path("create/", ProductMixinView.as_view()),
+
+o/p:
+    list.py:
+        end_point = "http://localhost:8000/api/product/list/" 
+
+        get_response = requests.get(end_point) 
+        print(get_response.json())
+
     create.py:
+        end_point = "http://localhost:8000/api/product/create/"
         data = {
             "title": "New title having same content",
             "price": 200
         }
-
         get_response = requests.post(end_point, json=data) 
         print(get_response.json())
 
-    o/p:
-        {'title': 'New title having same content', 'content': 'New title having same content', 'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}
-    
 
-#---------------------------------- ListAPIView -------------------------------------------------------------
+    o/p: 
+        Same output in list and create: we can overiride the method as per convenience
 
-i/p:
-    views.py:
-        queryset = Product.objects.all()
-        serializer_class = ProductSerializer
-
-o/p: 
-    i/p:
-        list.py:
-            end_point = "http://localhost:8000/api/product/list/" 
-
-            get_response = requests.get(end_point) 
-            print(get_response.json())
-
-    o/p:
-        [{'title': 'First_obj', 'content': 'Creating the first Obj', 
-        'price': '0.10', 'sale_price': '0.08', 'get_discount': '0.05', 
-        'my_discount': '0.05'}, {'title': 'Second_obj', 
-        'content': 'Creating the Second Obj', 'price': '1.00', 
-        'sale_price': '0.80', 'get_discount': '0.50', 'my_discount': '0.50'},
-        {'title': 'hello post request', 'content': None, 'price': '0.00', 
+        [{'title': 'hello my old friend updated hello', 'content': 'Creating the first Obj', 
+        'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+        {'title': 'Second_obj', 'content': 'Creating the Second Obj', 'price': '1.00', 'sale_price': '0.80', 
+        'get_discount': '0.50', 'my_discount': '0.50'}, 
+        {'title': 'hello my old friend updated hello', 'content': 'hello my old friend updated hello', 
+        'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+        {'title': 'New Product Created...', 'content': None, 'price': '0.00', 'sale_price': '0.00', 
+        'get_discount': '0.00', 'my_discount': '0.00'}, 
+        {'title': 'New Product Created...', 'content': 'new content...', 'price': '0.00', 
         'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'hello post request', 'content': None, 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'New Product Created...', 'content': None, 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'New Product Created...', 'content': 'new content...', 
-        'price': '0.00', 'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'New Product Created...', 'content': 'new content...', 'price': '100.00', 
-        'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
-        {'title': 'New title having same content', 'content': 'New title having same content', 
-        'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}] 
-
-
-#-------------------------------- ListCreateAPIView -------------------------------------------------------
-i/p:
-    views.py:
-        queryset = Product.objects.all()
-        serializer_class = ProductSerializer
-
-        def perform_create(self, serializer):
-            # we can update the data and validate data
-            # serializer.save(user=self.request.user)
-            print(serializer)
-            print(serializer.validated_data)
-
-            title = serializer.validated_data.get("title")
-            content = serializer.validated_data.get("content") or None
-            if not content:
-                content = title
-            serializer.save(content=content)
-            # send a Django signal
-
-o/p:
-    GET:
-        i/p: list_create.py:
-            end_point = "http://localhost:8000/api/product/list-create/" 
-
-            get_response = requests.get(end_point) 
-            print(get_response.json())
-
-    o/p:
-        [{'title': 'First_obj', 'content': 'Creating the first Obj', 
-        'price': '0.10', 'sale_price': '0.08', 'get_discount': '0.05', 
-        'my_discount': '0.05'}, {'title': 'Second_obj', 
-        'content': 'Creating the Second Obj', 'price': '1.00', 
-        'sale_price': '0.80', 'get_discount': '0.50', 'my_discount': '0.50'},
-        {'title': 'hello post request', 'content': None, 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'hello post request', 'content': None, 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'New Product Created...', 'content': None, 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'New Product Created...', 'content': 'new content...', 
-        'price': '0.00', 'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'New Product Created...', 'content': 'new content...', 'price': '100.00', 
-        'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
-        {'title': 'New title having same content', 'content': 'New title having same content', 
-        'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}] 
-
-
-    POST:
-        i/p: list_create.py:
-            get_response = requests.post(end_point, json={"title": "list-create_api_title_obj"})
-            print(get_response.json())
-
-        o/p:
-            {'title': 'list-create_api_title_obj', 'content': 'list-create_api_title_obj', 
-            'price': '0.00', 'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}
-
-
-
-# ------------------------------- Function Based Action ---------------------------------------------------
-i/p:
-    views.py:
-        @api_view(['GET', 'POST'])
-        def product_alt_view(request, pk=None, *args, **kwargs):
-            method = request.method
-
-            if method == "GET":
-                if pk:
-                    # queryset = Product.objects.filter(pk=pk)
-                    # if not queryset.exists():
-                    #     raise Http404
-                    obj = get_object_or_404(Product, pk=pk)
-                    data = ProductSerializer(obj, many=False).data
-                    return Response(data)
-                queryset = Product.objects.all()
-                data = ProductSerializer(queryset, many=True).data
-                return Response(data)
-            
-            if method == "POST":
-                serializer = ProductSerializer(data=request.data)
-                if serializer.is_valid(raise_exception=True):
-                    print(serializer.validated_data)
-                    title = serializer.validated_data.get("title")
-                    content = serializer.validated_data.get("content") or None
-                    if not content:
-                        content = title
-                    serializer.save(content=content)
-                    return Response(serializer.data)
-                return Response({"invalid": "Not a good data."}, status=status.HTTP_400_BAD_REQUEST)
-
-
-    urls.py:
-        urlpatterns = [
-            path("<int:pk>/", product_alt_view),
-            path("", product_alt_view),
-            path("create/", product_alt_view),
-            path("list/", product_alt_view),
-        ]
-
-O/p:
-    py details.py
-        {'title': 'hello post request', 'content': None, 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}
-
-
-    py list.py
-        [{'title': 'First_obj', 'content': 'Creating the first Obj', 
-        'price': '0.10', 'sale_price': '0.08', 'get_discount': '0.05', 
-        'my_discount': '0.05'}, {'title': 'Second_obj', 
-        'content': 'Creating the Second Obj', 'price': '1.00', 
-        'sale_price': '0.80', 'get_discount': '0.50', 'my_discount': '0.50'},
-        {'title': 'hello post request', 'content': None, 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'hello post request', 'content': None, 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'New Product Created...', 'content': None, 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'New Product Created...', 'content': 'new content...', 
-        'price': '0.00', 'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
         {'title': 'New Product Created...', 'content': 'new content...', 'price': '100.00', 
         'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
         {'title': 'New title having same content', 'content': 'New title having same content', 
         'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}]
 
 
-    py create.py
-        {'title': 'New title having same content', 'content': 'New title having same content', 
-        'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}
+# ------------------------------ mixins --------------------------------------------------------
 
+Inhertance of CreateAPIView:
+class CreateAPIView(mixin.CreateModelMixin, generics.GenericAPIView)
 
-#-------------------------------- UpdateAPIView ---------------------------------------------------------------              
-
-i/p: 
+i/p:
     views.py:
-        queryset = Product.objects.all()
-        serializer_class = ProductSerializer
-        lookup_field = "pk"
 
-        def perform_update(self, serializer):
-            instance = serializer.save()
-            if not instance.content:
-                instance.content = instance.title    # if content is None then content will be title
+    class ProductMixinView(
+    mixins.ListModelMixin, 
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    generics.GenericAPIView):
 
-    urls.py:
-         path("<int:pk>/update/", product_update_apiview),
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = "pk"
+
+    def get(self, request, *args, **kwargs):  #HTTP--->get
+        pk = kwargs.get("pk")
+        if pk:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+    
+    def perform_create(self, serializer):
+        title = serializer.validated_data.get("title")
+        content = serializer.validated_data.get("content")
+        if not content:
+            content = "mixin view performing perform_create action"
+        serializer.save(content=content)
+
 
 o/p:
-    update.py:
-        data = {
-            "title": "hello my old friend updated hello",
-            "price": 500
-        }
 
-        get_response = requests.put(end_point, json=data) 
+    details.py:
+        end_point = "http://localhost:8000/api/product/1/" 
+        get_response = requests.get(end_point) 
+        print(get_response.json())
+
+    list.py:
+        end_point = "http://localhost:8000/api/product/list/" 
+        get_response = requests.get(end_point) 
+        print(get_response.json())
+
+    create.py:
+        end_point = "http://localhost:8000/api/product/create/"
+        data = {
+            "title": "New title having same content",
+            "price": 200
+        }
+        get_response = requests.post(end_point, json=data) 
         print(get_response.json())
 
     
     o/p:
-        {'title': 'hello my old friend updated hello', 'content': 'Creating the first Obj', 
-        'price': '500.00', 'sale_price': '400.00', 'get_discount': '250.00', 'my_discount': '250.00'}
+        py details.py:
+            {'title': 'hello my old friend updated hello', 'content': 'Creating the first Obj', 
+            'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}
 
+        py create.py:
+            {'title': 'New title having same content', 
+            'content': 'mixin view performing perform_create action', 
+            'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}
 
-    update.py:
-        if content is None then content is converted to Title:
-        {'title': 'hello my old friend updated hello', 'content': 'hello my old friend updated hello', 
-        'price': '500.00', 'sale_price': '400.00', 'get_discount': '250.00', 'my_discount': '250.00'}
-
-
-#-------------------------------- DestroyAPIView-----------------------------------------------------
-
-i/p:
-    views.py:
-        queryset = Product.objects.all()
-        serializer_class = ProductSerializer
-        lookup_field = "pk"
-
-        def perform_destroy(self, instance):
-            return super().perform_destroy(instance)
-
-        
-o/p:
-    end_point = "http://localhost:8000/api/product/10/delete/" 
-
-
-    get_response = requests.delete(end_point) 
-    print(get_response.status_code, get_response.status_code==204)
-
-
-    o/p:
-        204 True
+        py list.py:
+            [{'title': 'hello my old friend updated hello', 'content': 'Creating the first Obj', 
+            'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+            {'title': 'Second_obj', 'content': 'Creating the Second Obj', 'price': '1.00', 'sale_price': '0.80', 
+            'get_discount': '0.50', 'my_discount': '0.50'}, 
+            {'title': 'hello my old friend updated hello', 'content': 'hello my old friend updated hello', 
+            'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+            {'title': 'New Product Created...', 'content': None, 'price': '0.00', 'sale_price': '0.00', 
+            'get_discount': '0.00', 'my_discount': '0.00'}, 
+            {'title': 'New Product Created...', 'content': 'new content...', 'price': '0.00', 
+            'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
+            {'title': 'New Product Created...', 'content': 'new content...', 'price': '100.00', 
+            'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+            {'title': 'New title having same content', 'content': 'New title having same content', 
+            'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}]
