@@ -1,24 +1,8 @@
-# -------------------- Mixin GenericAPIView -------------------------------------------------------
+# -------------------- permissions IsAuthenticated-------------------------------------------------------
 
 i/p:
     views.py:
-        class ProductMixinView(
-            mixins.ListModelMixin, 
-            generics.GenericAPIView):
-
-            queryset = Product.objects.all()
-            serializer_class = ProductSerializer
-
-            def get(self, request, *args, **kwargs):  #HTTP--->get
-                return self.list(request, *args, **kwargs)
-    
-            def post(self, request, *args, **kwargs):  #HTTP--->post
-                return self.list(request, *args, **kwargs)
-
-
-    url.py:
-        path("list/", ProductMixinView.as_view()),
-        path("create/", ProductMixinView.as_view()),
+         permission_classes = [permissions.IsAuthenticated]
 
 o/p:
     list.py:
@@ -26,82 +10,9 @@ o/p:
 
         get_response = requests.get(end_point) 
         print(get_response.json())
-
-    create.py:
-        end_point = "http://localhost:8000/api/product/create/"
-        data = {
-            "title": "New title having same content",
-            "price": 200
-        }
-        get_response = requests.post(end_point, json=data) 
-        print(get_response.json())
-
 
     o/p: 
-        Same output in list and create: we can overiride the method as per convenience
-
-        [{'title': 'hello my old friend updated hello', 'content': 'Creating the first Obj', 
-        'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
-        {'title': 'Second_obj', 'content': 'Creating the Second Obj', 'price': '1.00', 'sale_price': '0.80', 
-        'get_discount': '0.50', 'my_discount': '0.50'}, 
-        {'title': 'hello my old friend updated hello', 'content': 'hello my old friend updated hello', 
-        'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
-        {'title': 'New Product Created...', 'content': None, 'price': '0.00', 'sale_price': '0.00', 
-        'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'New Product Created...', 'content': 'new content...', 'price': '0.00', 
-        'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
-        {'title': 'New Product Created...', 'content': 'new content...', 'price': '100.00', 
-        'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
-        {'title': 'New title having same content', 'content': 'New title having same content', 
-        'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}]
-
-
-# ------------------------------ mixins --------------------------------------------------------
-
-Inhertance of CreateAPIView:
-class CreateAPIView(mixin.CreateModelMixin, generics.GenericAPIView)
-
-i/p:
-    views.py:
-
-    class ProductMixinView(
-    mixins.ListModelMixin, 
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    generics.GenericAPIView):
-
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    lookup_field = "pk"
-
-    def get(self, request, *args, **kwargs):  #HTTP--->get
-        pk = kwargs.get("pk")
-        if pk:
-            return self.retrieve(request, *args, **kwargs)
-        return self.list(request, *args, **kwargs)
-    
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-    
-    def perform_create(self, serializer):
-        title = serializer.validated_data.get("title")
-        content = serializer.validated_data.get("content")
-        if not content:
-            content = "mixin view performing perform_create action"
-        serializer.save(content=content)
-
-
-o/p:
-
-    details.py:
-        end_point = "http://localhost:8000/api/product/1/" 
-        get_response = requests.get(end_point) 
-        print(get_response.json())
-
-    list.py:
-        end_point = "http://localhost:8000/api/product/list/" 
-        get_response = requests.get(end_point) 
-        print(get_response.json())
+        {'detail': 'Authentication credentials were not provided.'}
 
     create.py:
         end_point = "http://localhost:8000/api/product/create/"
@@ -112,6 +23,103 @@ o/p:
         get_response = requests.post(end_point, json=data) 
         print(get_response.json())
 
+    o/p: 
+        {'detail': 'Authentication credentials were not provided.'}
+        
+
+# ------------------------------ permissions.IsAuthenticatedOrReadOnly --------------------------------------------------------
+
+i/p:
+    views.py:
+        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+o/p:
+    list.py:
+        end_point = "http://localhost:8000/api/product/list/" 
+
+        get_response = requests.get(end_point) 
+        print(get_response.json())
+
+    o/p: 
+        [{'title': 'hello my old friend updated hello', 'content': 'Creating the first Obj', 
+            'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+            {'title': 'Second_obj', 'content': 'Creating the Second Obj', 'price': '1.00', 'sale_price': '0.80', 
+            'get_discount': '0.50', 'my_discount': '0.50'}, 
+            {'title': 'hello my old friend updated hello', 'content': 'hello my old friend updated hello', 
+            'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+            {'title': 'New Product Created...', 'content': None, 'price': '0.00', 'sale_price': '0.00', 
+            'get_discount': '0.00', 'my_discount': '0.00'}, 
+            {'title': 'New Product Created...', 'content': 'new content...', 'price': '0.00', 
+            'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
+            {'title': 'New Product Created...', 'content': 'new content...', 'price': '100.00', 
+            'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+            {'title': 'New title having same content', 'content': 'New title having same content', 
+            'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}]
+
+
+    create.py:
+        end_point = "http://localhost:8000/api/product/create/"
+        data = {
+            "title": "New title having same content",
+            "price": 200
+        }
+        get_response = requests.post(end_point, json=data) 
+        print(get_response.json())
+
+    o/p: 
+        {'detail': 'Authentication credentials were not provided.'}
+
+
+#----------------------------------- authentication ---------------------------------------------------------
+
+i/p:
+    views.py:
+        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        authentication_classes = [authentication.SessionAuthentication]
+
+o/p:
+
+    o/p:
+    list.py:
+        end_point = "http://localhost:8000/api/product/list/" 
+
+        get_response = requests.get(end_point) 
+        print(get_response.json())
+
+    o/p: 
+        [{'title': 'hello my old friend updated hello', 'content': 'Creating the first Obj', 
+            'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+            {'title': 'Second_obj', 'content': 'Creating the Second Obj', 'price': '1.00', 'sale_price': '0.80', 
+            'get_discount': '0.50', 'my_discount': '0.50'}, 
+            {'title': 'hello my old friend updated hello', 'content': 'hello my old friend updated hello', 
+            'price': '100.00', 'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+            {'title': 'New Product Created...', 'content': None, 'price': '0.00', 'sale_price': '0.00', 
+            'get_discount': '0.00', 'my_discount': '0.00'}, 
+            {'title': 'New Product Created...', 'content': 'new content...', 'price': '0.00', 
+            'sale_price': '0.00', 'get_discount': '0.00', 'my_discount': '0.00'}, 
+            {'title': 'New Product Created...', 'content': 'new content...', 'price': '100.00', 
+            'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
+            {'title': 'New title having same content', 'content': 'New title having same content', 
+            'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}]
+
+
+    create.py:
+        end_point = "http://localhost:8000/api/product/create/"
+        data = {
+            "title": "New title having same content",
+            "price": 200
+        }
+        get_response = requests.post(end_point, json=data) 
+        print(get_response.json())
+
+    o/p: 
+        {'detail': 'Authentication credentials were not provided.'}
+
+
+    AdminPanel:
+        user: superuser: can create and view all list of data by adminpanel due to SessionAuthentication
+
+
+#---------------------------------------------------------------------------------------------------------
     
     o/p:
         py details.py:
@@ -138,3 +146,182 @@ o/p:
             'sale_price': '80.00', 'get_discount': '50.00', 'my_discount': '50.00'}, 
             {'title': 'New title having same content', 'content': 'New title having same content', 
             'price': '200.00', 'sale_price': '160.00', 'get_discount': '100.00', 'my_discount': '100.00'}]
+
+
+
+#--------------------------User&Group and Django model permission--------------------------------------------------
+user: staff
+password: Staff@Staff
+
+views.py:
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    authentication_classes = [authentication.SessionAuthentication]
+
+Staff without Permission:
+    Site administration
+        You don’t have permission to view or edit anything.
+
+
+Staff userPermission:
+    Chosen user permissions 
+        Filter
+        product_app | product | Can view product
+
+
+admin: 
+    Staff only view the Products	
+        View product
+            Product object (12)
+            HISTORY
+
+            Title:
+            creating title by admin
+            Content:
+            session authentication can create and view all the list of data
+            Price:
+            808.00
+
+----------------------------------------------------------------------------------------------
+Groups:
+    StaffProductEditor
+        Name: StaffProductEditor
+
+    Chosen permissions 
+        Filter
+        product_app | product | Can add productproduct_app | 
+                      product | Can change productproduct_app | 
+                      product | Can view product
+
+
+    user: Staff:
+        Chosen groups 
+            Filter StaffProductEditor
+
+        Chosen user permissions :
+             None
+
+
+Admin Staff:
+    PRODUCT_APP     Products	Add
+        Change product
+        Product object (12)
+
+        Title: creating title by admin
+        Content: session authentication can create and view all the list of data
+        Price:900
+
+        Save Save_add_another Save_and_continue_editing
+
+        
+#----------------------------------------------------------------------------------------------------------
+
+views.py:
+    serializer_class = ProductSerializer
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.DjangoModelPermissions]
+
+Staff permission:
+    Chosen user permissions 
+    Filter  product_app | product | Can view product
+
+admin.py: Staff cannot add or create only view permission
+    PRODUCT_APP
+        Products	
+        View product
+        Product object (12)
+        HISTORY
+
+        Title:
+        creating title by admin
+        Content:
+        session authentication can create and view all the list of data
+        Price:
+        808.00
+        Close
+
+http://127.0.0.1:8000/api/product/list/:
+    [
+    {
+        "title": "hello my old friend updated hello",
+        "content": "Creating the first Obj",
+        "price": "100.00",
+        "sale_price": "80.00",
+        "get_discount": "50.00",
+        "my_discount": "50.00"
+    },
+    {
+        "title": "Second_obj",
+        "content": "Creating the Second Obj",
+        "price": "1.00",
+        "sale_price": "0.80",
+        "get_discount": "0.50",
+        "my_discount": "0.50"
+    },
+    {
+        "title": "hello my old friend updated hello",
+        "content": "hello my old friend updated hello",
+        "price": "100.00",
+        "sale_price": "80.00",
+        "get_discount": "50.00",
+        "my_discount": "50.00"
+    },
+    {
+        "title": "New Product Created...",
+        "content": null,
+        "price": "0.00",
+        "sale_price": "0.00",
+        "get_discount": "0.00",
+        "my_discount": "0.00"
+    },
+    {
+        "title": "New Product Created...",
+        "content": "new content...",
+        "price": "0.00",
+        "sale_price": "0.00",
+        "get_discount": "0.00",
+        "my_discount": "0.00"
+    },
+    {
+        "title": "New Product Created...",
+        "content": "new content...",
+        "price": "100.00",
+        "sale_price": "80.00",
+        "get_discount": "50.00",
+        "my_discount": "50.00"
+    },
+    {
+        "title": "New title having same content",
+        "content": "New title having same content",
+        "price": "200.00",
+        "sale_price": "160.00",
+        "get_discount": "100.00",
+        "my_discount": "100.00"
+    },
+    {
+        "title": "New title having same content",
+        "content": "mixin view performing perform_create action",
+        "price": "200.00",
+        "sale_price": "160.00",
+        "get_discount": "100.00",
+        "my_discount": "100.00"
+    },
+    {
+        "title": "creating title by admin",
+        "content": "session authentication can create and view all the list of data",
+        "price": "808.00",
+        "sale_price": "646.40",
+        "get_discount": "404.00",
+        "my_discount": "404.00"
+    }
+    ]
+
+#----------------------------------------------------------------------------------------------
+    POST requests require the user to have the add permission on the model.
+    PUT and PATCH requests require the user to have the change permission on the model.
+    DELETE requests require the user to have the delete permission on the model.
+
+    ==>
+    """
+        The default behaviour can also be overridden to support custom model permissions. 
+        For example, you might want to include a view model permission for GET requests.
+    """
